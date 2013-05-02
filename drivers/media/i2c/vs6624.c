@@ -809,11 +809,9 @@ static int vs6624_probe(struct i2c_client *client,
 	/* wait 100ms before any further i2c writes are performed */
 	mdelay(100);
 
-	sensor = kzalloc(sizeof(*sensor), GFP_KERNEL);
-	if (sensor == NULL) {
-		gpio_free(*ce);
+	sensor = devm_kzalloc(&client->dev, sizeof(*sensor), GFP_KERNEL);
+	if (sensor == NULL)
 		return -ENOMEM;
-	}
 
 	sd = &sensor->sd;
 	v4l2_i2c_subdev_init(sd, client, &vs6624_ops);
@@ -861,7 +859,6 @@ static int vs6624_probe(struct i2c_client *client,
 		int err = hdl->error;
 
 		v4l2_ctrl_handler_free(hdl);
-		kfree(sensor);
 		gpio_free(*ce);
 		return err;
 	}
@@ -870,7 +867,6 @@ static int vs6624_probe(struct i2c_client *client,
 	ret = v4l2_ctrl_handler_setup(hdl);
 	if (ret) {
 		v4l2_ctrl_handler_free(hdl);
-		kfree(sensor);
 		gpio_free(*ce);
 	}
 	return ret;
@@ -884,7 +880,6 @@ static int vs6624_remove(struct i2c_client *client)
 	v4l2_device_unregister_subdev(sd);
 	v4l2_ctrl_handler_free(sd->ctrl_handler);
 	gpio_free(sensor->ce_pin);
-	kfree(sensor);
 	return 0;
 }
 

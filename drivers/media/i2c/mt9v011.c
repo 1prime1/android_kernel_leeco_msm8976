@@ -522,7 +522,7 @@ static int mt9v011_probe(struct i2c_client *c,
 	     I2C_FUNC_SMBUS_READ_BYTE | I2C_FUNC_SMBUS_WRITE_BYTE_DATA))
 		return -EIO;
 
-	core = kzalloc(sizeof(struct mt9v011), GFP_KERNEL);
+	core = devm_kzalloc(&c->dev, sizeof(struct mt9v011), GFP_KERNEL);
 	if (!core)
 		return -ENOMEM;
 
@@ -535,7 +535,6 @@ static int mt9v011_probe(struct i2c_client *c,
 	    (version != MT9V011_REV_B_VERSION)) {
 		v4l2_info(sd, "*** unknown micron chip detected (0x%04x).\n",
 			  version);
-		kfree(core);
 		return -EINVAL;
 	}
 
@@ -558,7 +557,6 @@ static int mt9v011_probe(struct i2c_client *c,
 
 		v4l2_err(sd, "control initialization error %d\n", ret);
 		v4l2_ctrl_handler_free(&core->ctrls);
-		kfree(core);
 		return ret;
 	}
 	core->sd.ctrl_handler = &core->ctrls;
@@ -594,7 +592,7 @@ static int mt9v011_remove(struct i2c_client *c)
 
 	v4l2_device_unregister_subdev(sd);
 	v4l2_ctrl_handler_free(&core->ctrls);
-	kfree(to_mt9v011(sd));
+
 	return 0;
 }
 

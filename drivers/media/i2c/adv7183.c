@@ -569,7 +569,7 @@ static int adv7183_probe(struct i2c_client *client,
 	if (pin_array == NULL)
 		return -EINVAL;
 
-	decoder = kzalloc(sizeof(struct adv7183), GFP_KERNEL);
+	decoder = devm_kzalloc(&client->dev, sizeof(*decoder), GFP_KERNEL);
 	if (decoder == NULL)
 		return -ENOMEM;
 
@@ -579,8 +579,7 @@ static int adv7183_probe(struct i2c_client *client,
 	if (gpio_request_one(decoder->reset_pin, GPIOF_OUT_INIT_LOW,
 			     "ADV7183 Reset")) {
 		v4l_err(client, "failed to request GPIO %d\n", decoder->reset_pin);
-		ret = -EBUSY;
-		goto err_free_decoder;
+		return -EBUSY;
 	}
 
 	if (gpio_request_one(decoder->oe_pin, GPIOF_OUT_INIT_HIGH,
@@ -642,8 +641,6 @@ err_free_oe:
 	gpio_free(decoder->oe_pin);
 err_free_reset:
 	gpio_free(decoder->reset_pin);
-err_free_decoder:
-	kfree(decoder);
 	return ret;
 }
 
@@ -656,7 +653,6 @@ static int adv7183_remove(struct i2c_client *client)
 	v4l2_ctrl_handler_free(sd->ctrl_handler);
 	gpio_free(decoder->oe_pin);
 	gpio_free(decoder->reset_pin);
-	kfree(decoder);
 	return 0;
 }
 
