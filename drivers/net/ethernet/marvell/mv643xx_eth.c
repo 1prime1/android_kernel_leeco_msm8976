@@ -2482,6 +2482,7 @@ static int mv643xx_eth_shared_of_add_port(struct platform_device *pdev,
 	struct resource res;
 	const char *mac_addr;
 	int ret;
+	int dev_num = 0;
 
 	memset(&ppd, 0, sizeof(ppd));
 	ppd.shared = pdev;
@@ -2499,6 +2500,14 @@ static int mv643xx_eth_shared_of_add_port(struct platform_device *pdev,
 
 	if (ppd.port_number >= 3) {
 		dev_err(&pdev->dev, "invalid reg property on %s\n", pnp->name);
+		return -EINVAL;
+	}
+
+	while (dev_num < 3 && port_platdev[dev_num])
+		dev_num++;
+
+	if (dev_num == 3) {
+		dev_err(&pdev->dev, "too many ports registered\n");
 		return -EINVAL;
 	}
 
@@ -2520,7 +2529,7 @@ static int mv643xx_eth_shared_of_add_port(struct platform_device *pdev,
 		of_property_read_u32(pnp, "duplex", &ppd.duplex);
 	}
 
-	ppdev = platform_device_alloc(MV643XX_ETH_NAME, ppd.port_number);
+	ppdev = platform_device_alloc(MV643XX_ETH_NAME, dev_num);
 	if (!ppdev)
 		return -ENOMEM;
 	ppdev->dev.coherent_dma_mask = DMA_BIT_MASK(32);
@@ -2537,7 +2546,7 @@ static int mv643xx_eth_shared_of_add_port(struct platform_device *pdev,
 	if (ret)
 		goto port_err;
 
-	port_platdev[ppd.port_number] = ppdev;
+	port_platdev[dev_num] = ppdev;
 
 	return 0;
 
