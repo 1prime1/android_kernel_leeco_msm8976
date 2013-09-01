@@ -309,7 +309,7 @@ static struct vxlan_fdb *__vxlan_find_mac(struct vxlan_dev *vxlan,
 	struct vxlan_fdb *f;
 
 	hlist_for_each_entry_rcu(f, head, hlist) {
-		if (compare_ether_addr(mac, f->eth_addr) == 0)
+		if (ether_addr_equal(mac, f->eth_addr))
 			return f;
 	}
 
@@ -732,8 +732,7 @@ static int vxlan_udp_encap_recv(struct sock *sk, struct sk_buff *skb)
 	skb->protocol = eth_type_trans(skb, vxlan->dev);
 
 	/* Ignore packet loops (and multicast echo) */
-	if (compare_ether_addr(eth_hdr(skb)->h_source,
-			       vxlan->dev->dev_addr) == 0)
+	if (ether_addr_equal(eth_hdr(skb)->h_source, vxlan->dev->dev_addr))
 		goto drop;
 
 	if ((vxlan->flags & VXLAN_F_LEARN) &&
@@ -886,7 +885,7 @@ static bool route_shortcircuit(struct net_device *dev, struct sk_buff *skb)
 	if (n) {
 		bool diff;
 
-		diff = compare_ether_addr(eth_hdr(skb)->h_dest, n->ha) != 0;
+		diff = !ether_addr_equal(eth_hdr(skb)->h_dest, n->ha);
 		if (diff) {
 			memcpy(eth_hdr(skb)->h_source, eth_hdr(skb)->h_dest,
 				dev->addr_len);
